@@ -6,44 +6,27 @@ import ephem
 __author__ = "Eric Dose :: New Mexico Mira Project, Albuquerque"
 
 
-# def jd_from_datetime_utc(datetime_utc=None):
-#     """  Converts a UTC datetime to Julian date. Imported from photrix (E. Dose).
-#     :param datetime_utc: date and time (in UTC) to convert [python datetime object]
-#     :return: Julian date corresponding to date and time [float].
-#     from photrix August 2018.
-#     """
-#     if datetime_utc is None:
-#         return None
-#     datetime_j2000 = datetime(2000, 1, 1, 0, 0, 0).replace(tzinfo=timezone.utc)
-#     jd_j2000 = 2451544.5
-#     seconds_since_j2000 = (datetime_utc - datetime_j2000).total_seconds()
-#     return jd_j2000 + seconds_since_j2000 / (24*3600)
-#
-#
-# def jd_now():
-#     """  Returns Julian date of moment this function is called. Imported from photrix (E. Dose).
-#     :return: Julian date for immediate present per system clock [float].
-#     from photrix August 2018.
-#     """
-#     return jd_from_datetime_utc(datetime.now(timezone.utc))
-
-
-def calc_az_alt(ra, dec, longitude, latitude, datetime_utc):
+def calc_az_alt(longitude, latitude, ra, dec, datetime_utc):
     """  Returns azimuth and altitude for sky position (RA and Dec)
          at a given earth longitude and Latitude, at a given date and time (in UTC).
-    :param ra: right ascension of sky position, in degrees [float].
-    :param dec: declination of sky position, in degrees [float].
     :param longitude: longitude of earth position, in degrees east=positive [float].
     :param latitude: latitude of earth position, in degrees north=positive [float].
+    :param ra: right ascension of sky position, in degrees [float].
+    :param dec: declination of sky position, in degrees [float].
     :param datetime_utc: date and time for which to calculate az and alt, in UTC [datetime object].
     :return: 2-tuple of azimuth, altitude in degrees [2-tuple of floats].
     adapted from photrix August 2018.
     """
     # TODO: recast this fn for separate ra, dec, rather than RaDec object.
     obs = ephem.Observer()  # for local use.
-    obs.lon = str(longitude * math.pi / 180)  # cast to radians then to string.
-    obs.lat = str(latitude * math.pi / 180)   # "
+    obs.lon = degrees_as_hex(longitude)
+    obs.lat = degrees_as_hex(latitude)
     obs.date = datetime_utc
+    # print('long.deg=' + str(obs.long))
+    # print('long.raw=' + repr(obs.long))
+    # print('lat.deg=' + str(obs.lat))
+    # print('lat.raw=' + repr(obs.lat))
+    # print('datetime.utc=' + str(obs.date))
 
     target_ephem = ephem.FixedBody()  # so named to suggest restricting its use to ephem.
     target_ephem._epoch = '2000'
@@ -202,8 +185,9 @@ def ra_as_hours(ra_degrees):
 
 def degrees_as_hex(angle_degrees, seconds_decimal_places=2):
     """
-    :param angle_degrees: any angle as degrees
-    :return: same angle in hex notation, unbounded.
+    :param angle_degrees: any angle as degrees [float]
+    :param seconds_decimal_places: number of decimal places to express for seconds part of hex string [int]
+    :return: same angle in hex notation, unbounded [string].
     from photrix August 2018.
     """
     if angle_degrees < 0:
