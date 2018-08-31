@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import math
 
 import ephem
@@ -6,26 +6,26 @@ import ephem
 __author__ = "Eric Dose :: New Mexico Mira Project, Albuquerque"
 
 
-def jd_from_datetime_utc(datetime_utc=None):
-    """  Converts a UTC datetime to Julian date. Imported from photrix (E. Dose).
-    :param datetime_utc: date and time (in UTC) to convert [python datetime object]
-    :return: Julian date corresponding to date and time [float].
-    from photrix August 2018.
-    """
-    if datetime_utc is None:
-        return None
-    datetime_j2000 = datetime(2000, 1, 1, 0, 0, 0).replace(tzinfo=timezone.utc)
-    jd_j2000 = 2451544.5
-    seconds_since_j2000 = (datetime_utc - datetime_j2000).total_seconds()
-    return jd_j2000 + seconds_since_j2000 / (24*3600)
-
-
-def jd_now():
-    """  Returns Julian date of moment this function is called. Imported from photrix (E. Dose).
-    :return: Julian date for immediate present per system clock [float].
-    from photrix August 2018.
-    """
-    return jd_from_datetime_utc(datetime.now(timezone.utc))
+# def jd_from_datetime_utc(datetime_utc=None):
+#     """  Converts a UTC datetime to Julian date. Imported from photrix (E. Dose).
+#     :param datetime_utc: date and time (in UTC) to convert [python datetime object]
+#     :return: Julian date corresponding to date and time [float].
+#     from photrix August 2018.
+#     """
+#     if datetime_utc is None:
+#         return None
+#     datetime_j2000 = datetime(2000, 1, 1, 0, 0, 0).replace(tzinfo=timezone.utc)
+#     jd_j2000 = 2451544.5
+#     seconds_since_j2000 = (datetime_utc - datetime_j2000).total_seconds()
+#     return jd_j2000 + seconds_since_j2000 / (24*3600)
+#
+#
+# def jd_now():
+#     """  Returns Julian date of moment this function is called. Imported from photrix (E. Dose).
+#     :return: Julian date for immediate present per system clock [float].
+#     from photrix August 2018.
+#     """
+#     return jd_from_datetime_utc(datetime.now(timezone.utc))
 
 
 def calc_az_alt(ra, dec, longitude, latitude, datetime_utc):
@@ -53,7 +53,32 @@ def calc_az_alt(ra, dec, longitude, latitude, datetime_utc):
     return target_ephem.az * 180 / math.pi, target_ephem.alt * 180 / math.pi
 
 
-PARSE_TEXT_TO_DEGREES___________________ = 0
+def next_datetime_from_time_string(time_text):
+    time_list = parse_hex(time_text)
+    if len(time_list) != 3:
+        return None
+    try:
+        hour = int(time_list[0])
+        minute = int(time_list[1])
+        second = int(time_list[2])
+    except ValueError:
+        return None
+    if not (0 <= hour <= 23):
+        return None
+    if not (0 <= minute <= 59):
+        return None
+    if not (0 <= second <= 59):
+        return None
+    now = datetime.now(timezone.utc)
+    raw_time = datetime(year=now.year, month=now.month, day=now.day,
+                        hour=hour, minute=minute, second=second).replace(tzinfo=timezone.utc)
+    if raw_time > now:
+        return raw_time
+    else:
+        return raw_time + timedelta(days=1)
+
+
+PARSE_TEXT__________________________ = 0
 
 
 def parse_hex(hex_string):
@@ -88,14 +113,14 @@ def hex_degrees_as_degrees(hex_degrees_string):
         if len(hex_list) == 1:
             dec_degrees = float(hex_list[0])  # input assumed to be in degrees.
         elif len(hex_list) == 2:
-            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0):
+            if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0):
                 return None
-            dec_degrees = sign * (abs(float(hex_list[0])) + float(hex_list[1])/60.0)  # input is hex.
+            dec_degrees = sign * (abs(int(hex_list[0])) + int(hex_list[1])/60.0)  # input is hex.
         else:
-            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0) or\
+            if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0) or\
                (float(hex_list[2]) >= 60) or (float(hex_list[2]) < 0):
                 return None
-            dec_degrees = sign * (abs(float(hex_list[0])) + float(hex_list[1]) / 60.0 +
+            dec_degrees = sign * (abs(int(hex_list[0])) + int(hex_list[1]) / 60.0 +
                                   float(hex_list[2])/3600.0)  # input is hex.
     except ValueError:
         return None
@@ -122,25 +147,26 @@ def latitude_as_degrees(latitude_string):
 
 def ra_as_degrees(ra_string):
     """
-    :param ra_string: string in either full hex ("12:34:56.7777" or "12 34 56.7777"),
-               or degrees ("234.55")
+    :param ra_string: string in either  hex ("12:34:56.7777" or "12 34 56.7777" or "12 34"),
+               but not in degrees in this implementation.
     :return float of Right Ascension in degrees between 0 and 360.
     adapted from photrix.util August 2018; added return=None for unparseable string,
         or for minutes or seconds = negative or >=60.
+    adapted heavily from photrix, August 2018.
     """
     hex_list = parse_hex(ra_string)
     try:
         if len(hex_list) == 1:
-            ra_degrees = float(hex_list[0])  # input assumed to be in degrees.
+            return None  # input in degrees NOT allowed here.
         elif len(hex_list) == 2:
-            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0):
+            if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0):
                 return None
-            ra_degrees = 15 * (float(hex_list[0]) + float(hex_list[1])/60.0)  # input assumed in hex.
+            ra_degrees = 15 * (int(hex_list[0]) + int(hex_list[1])/60.0)  # input assumed in hex.
         else:
-            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0) or\
+            if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0) or\
                (float(hex_list[2]) >= 60) or (float(hex_list[2]) < 0):
                 return None
-            ra_degrees = 15 * (float(hex_list[0]) + float(hex_list[1]) / 60.0 +
+            ra_degrees = 15 * (int(hex_list[0]) + int(hex_list[1]) / 60.0 +
                                float(hex_list[2])/3600.0)  # input assumed in hex.
     except ValueError:
         return None
@@ -153,7 +179,7 @@ def dec_as_degrees(dec_text):
     return latitude_as_degrees(dec_text)  # exactly the same math & limits.
 
 
-RECAST_TO_STRING___________________ = 0
+RECAST_TO_TEXT___________________ = 0
 
 
 def ra_as_hours(ra_degrees):
@@ -194,3 +220,8 @@ def degrees_as_hex(angle_degrees, seconds_decimal_places=2):
     hex_string = format_string.format(sign, int(degrees), int(minutes), seconds)
     return hex_string
 
+
+def datetime_as_string(this_datetime):
+    if not isinstance(this_datetime, datetime):
+        return None
+    return '{:%Y-%m-%d %H:%M:%S}  UTC'.format(this_datetime)

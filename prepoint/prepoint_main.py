@@ -46,12 +46,12 @@ class ApplicationPrePoint(tk.Tk):
         # Populate left_frame:
         site_labelframe = tk.LabelFrame(left_frame, text=' Site ', padx=10, pady=10)
         site_labelframe.grid(pady=0, sticky='ew')
-        site_inner_frame = tk.Frame(site_labelframe)
-        site_inner_frame.pack()
         target_labelframe = tk.LabelFrame(left_frame, text=' Target ', padx=10, pady=10)
         target_labelframe.grid(pady=15, sticky='ew')
         # Populate site_labelframe:
         self.site_is_locked = False
+        site_inner_frame = tk.Frame(site_labelframe)
+        site_inner_frame.pack()
         longitude_label = tk.Label(site_inner_frame, text='Long. ')
         longitude_label.grid(row=0, column=0, sticky='e')
         self.longitude = tk.StringVar()
@@ -85,10 +85,10 @@ class ApplicationPrePoint(tk.Tk):
         self.site_readback_longitude_hex.grid(row=0, column=1, sticky='e')
         self.site_readback_latitude_hex = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
         self.site_readback_latitude_hex.grid(row=1, column=1, sticky='e')
-        self.site_readback_longitude_dec = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
-        self.site_readback_longitude_dec.grid(row=0, column=2, sticky='e')
-        self.site_readback_latitude_dec = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
-        self.site_readback_latitude_dec.grid(row=1, column=2, sticky='e')
+        self.site_readback_longitude_decimal = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
+        self.site_readback_longitude_decimal.grid(row=0, column=2, sticky='e')
+        self.site_readback_latitude_decimal = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
+        self.site_readback_latitude_decimal.grid(row=1, column=2, sticky='e')
 
         site_lock_frame = tk.Frame(site_inner_frame)
         site_lock_frame.grid(row=3, column=0, columnspan=4, sticky='we')
@@ -103,44 +103,76 @@ class ApplicationPrePoint(tk.Tk):
         self._update_site_area()
 
         # Populate target_labelframe:
-        target_ra_label = tk.Label(target_labelframe, text='RA ')
+        self.target_is_locked = False
+        target_inner_frame = tk.Frame(target_labelframe)
+        target_inner_frame.pack()
+
+        target_ra_label = tk.Label(target_inner_frame, text='RA ')
         target_ra_label.grid(row=0, column=0, sticky='e')
         self.target_ra = tk.StringVar()
-        self.target_ra_entry = ttk.Entry(target_labelframe, width=16, justify=tk.LEFT,
+        self.target_ra.trace('w', self._update_target_area)
+        self.target_ra_entry = ttk.Entry(target_inner_frame, width=2, justify=tk.LEFT,
                                          textvariable=self.target_ra)
-        self.target_ra_entry.grid(row=0, column=1, sticky='e')
-        self.target_ra_ok_label = tk.Label(target_labelframe, text=WRONG_MARK)
+        self.target_ra_entry.grid(row=0, column=1, sticky='ew')
+        self.target_ra_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK)
         self.target_ra_ok_label.grid(row=0, column=2, sticky='ns')
-        target_ra_units_label = tk.Label(target_labelframe, text=' hh mm ss')
+        target_ra_units_label = tk.Label(target_inner_frame, text=' hh mm ss')
         target_ra_units_label.grid(row=0, column=3, sticky='w')
-        target_dec_label = tk.Label(target_labelframe, text='Dec ')
+        target_dec_label = tk.Label(target_inner_frame, text='Dec ')
         target_dec_label.grid(row=1, column=0, sticky='e')
         self.target_dec = tk.StringVar()
-        self.target_dec_entry = ttk.Entry(target_labelframe, width=16, justify=tk.LEFT,
+        self.target_dec.trace('w', self._update_target_area)
+        self.target_dec_entry = ttk.Entry(target_inner_frame, width=22, justify=tk.LEFT,
                                           textvariable=self.target_dec)
-        self.target_dec_entry.grid(row=1, column=1, sticky='e')
-        self.target_dec_ok_label = tk.Label(target_labelframe, text=WRONG_MARK)
+        self.target_dec_entry.grid(row=1, column=1, sticky='ew')
+        self.target_dec_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK)
         self.target_dec_ok_label.grid(row=1, column=2, sticky='ns')
-        target_dec_units_label = tk.Label(target_labelframe, text=' ' + DEGREE_SIGN + '   +N  -S')
+        target_dec_units_label = tk.Label(target_inner_frame, text=' ' + DEGREE_SIGN + '   +N  -S')
         target_dec_units_label.grid(row=1, column=3, sticky='w')
 
-        occ_time_label = tk.Label(target_labelframe, text='occ UTC ')
+        occ_time_label = tk.Label(target_inner_frame, text='occ UTC ')
         occ_time_label.grid(row=2, column=0, sticky='e')
         self.occ_time = tk.StringVar()
-        self.occ_time_entry = ttk.Entry(target_labelframe, width=14, justify=tk.LEFT,
+        self.occ_time.trace('w', self._update_target_area)
+        self.occ_time_entry = ttk.Entry(target_inner_frame, width=18, justify=tk.LEFT,
                                         textvariable=self.occ_time)
         self.occ_time_entry.grid(row=2, column=1, sticky='e')
-        self.occ_time_ok_label = tk.Label(target_labelframe, text=WRONG_MARK)
+        self.occ_time_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK)
         self.occ_time_ok_label.grid(row=2, column=2, sticky='ns')
-        occ_time_units_label = tk.Label(target_labelframe, text=' hh mm ss (next) ')
-        occ_time_units_label.grid(row=2, column=3, sticky='w')
-        target_lock_frame = tk.Frame(target_labelframe)
-        target_lock_frame.grid(row=3, column=0, columnspan=3, sticky='e')
+        occ_time_units_label = tk.Label(target_inner_frame, text=' hh mm ss (next) ')
+        occ_time_units_label.grid(row=2, column=3, sticky='ew')
+
+        target_readback_labelframe = tk.LabelFrame(target_inner_frame, text=' readback ', padx=36, pady=5)
+        target_readback_labelframe.grid(row=3, column=0, columnspan=4, sticky='ew', pady=6)
+        target_readback_ra_label = tk.Label(target_readback_labelframe, text='RA ')
+        target_readback_ra_label.grid(row=0, column=0, sticky='e')
+        target_readback_dec_label = tk.Label(target_readback_labelframe, text='Dec ')
+        target_readback_dec_label.grid(row=1, column=0, sticky='e')
+        target_readback_occ_time_label = tk.Label(target_readback_labelframe, text='occ UTC ')
+        target_readback_occ_time_label.grid(row=2, column=0, sticky='e')
+        self.target_readback_ra_hex = tk.Label(target_readback_labelframe, text=NO_DATA, padx=2)
+        self.target_readback_ra_hex.grid(row=0, column=1, sticky='e')
+        self.target_readback_dec_hex = tk.Label(target_readback_labelframe, text=NO_DATA, padx=2)
+        self.target_readback_dec_hex.grid(row=1, column=1, sticky='e')
+        self.target_readback_occ_time = tk.Label(target_readback_labelframe, text=NO_DATA, width=25, padx=2)
+        self.target_readback_occ_time.grid(row=2, column=1, columnspan=2, sticky='e')
+        self.target_readback_ra_decimal = tk.Label(target_readback_labelframe, text=NO_DATA, padx=2)
+        self.target_readback_ra_decimal.grid(row=0, column=2, sticky='e')
+        self.target_readback_dec_decimal = tk.Label(target_readback_labelframe, text=NO_DATA, padx=2)
+        self.target_readback_dec_decimal.grid(row=1, column=2, sticky='e')
+
+        target_lock_frame = tk.Frame(target_inner_frame)
+        target_lock_frame.grid(row=4, column=0, columnspan=4, sticky='ew')
+        target_lock_frame.columnconfigure(0, weight=100)
+        button_target_lock_frame_spacer = tk.Label(target_lock_frame, text=' ')
+        button_target_lock_frame_spacer.grid(row=0, column=0, sticky='ew')
         self.button_target_unlock = ttk.Button(target_lock_frame, text='Unlock',
-                                               command=self._unlock_target)
-        self.button_target_unlock.grid(row=0, column=0, sticky='ew')
-        self.button_target_lock = ttk.Button(target_lock_frame, text='Lock', command=self._lock_target)
-        self.button_target_lock.grid(row=0, column=1, sticky='ew')
+                                               command=self._target_unlock_pressed)
+        self.button_target_unlock.grid(row=0, column=1, sticky='e')
+        self.button_target_lock = ttk.Button(target_lock_frame, text='Lock',
+                                             command=self._target_lock_pressed)
+        self.button_target_lock.grid(row=0, column=2, sticky='e')
+        self._update_target_area()
 
         # Populate right_frame:
         button_taking_image = ttk.Button(right_frame, text='\nCLICK when TAKING IMAGE\n',
@@ -198,6 +230,8 @@ class ApplicationPrePoint(tk.Tk):
         self.up_down_degrees = tk.Label(move_scope_labelframe, text=NO_DATA, font=MOVE_SCOPE_FONT)
         self.up_down_degrees.grid(row=1, column=2, sticky='w')
 
+    # ============== SITE AREA =================
+
     def _update_site_area(self, *keys):
         if self.site_is_locked:
             self.longitude_entry.state(["disabled"])
@@ -210,21 +244,22 @@ class ApplicationPrePoint(tk.Tk):
             if longitude_degrees is None:
                 self.longitude_ok_label['text'] = WRONG_MARK
                 self.site_readback_longitude_hex['text'] = NO_DATA
-                self.site_readback_longitude_dec['text'] = NO_DATA
+                self.site_readback_longitude_decimal['text'] = NO_DATA
             else:
                 self.longitude_ok_label['text'] = CHECK_MARK
                 self.site_readback_longitude_hex['text'] = u.degrees_as_hex(longitude_degrees)
-                self.site_readback_longitude_dec['text'] = '{:10.5f}'.format(longitude_degrees)
+                self.site_readback_longitude_decimal['text'] = '{:10.5f}'.format(longitude_degrees)
             if latitude_degrees is None:
                 self.latitude_ok_label['text'] = WRONG_MARK
                 self.site_readback_latitude_hex['text'] = NO_DATA
-                self.site_readback_latitude_dec['text'] = NO_DATA
+                self.site_readback_latitude_decimal['text'] = NO_DATA
             else:
                 self.latitude_ok_label['text'] = CHECK_MARK
                 self.site_readback_latitude_hex['text'] = u.degrees_as_hex(latitude_degrees)
-                self.site_readback_latitude_dec['text'] = '{:10.5f}'.format(latitude_degrees)
+                self.site_readback_latitude_decimal['text'] = '{:10.5f}'.format(latitude_degrees)
+
             if longitude_degrees is None or latitude_degrees is None:
-                # Can't use or lock site data as entered.
+                # Can't use or lock Target data as entered.
                 self.longitude_entry.state(["!disabled"])   # enabled
                 self.latitude_entry.state(["!disabled"])    # enabled
                 self.button_site_lock.state(["disabled"])
@@ -241,30 +276,87 @@ class ApplicationPrePoint(tk.Tk):
         self.longitude_entry.state(["disabled"])
         self.latitude_entry.state(["disabled"])
         self.button_site_unlock.state(['!disabled'])  # enabled
-        self.button_site_lock.state(['disabled'])     # disabled
+        self.button_site_lock.state(['disabled'])  # disabled
         self.site_is_locked = True
 
     def _site_unlock_pressed(self):
         self.longitude_entry.state(["!disabled"])
         self.latitude_entry.state(["!disabled"])
         self.button_site_unlock.state(['disabled'])  # disabled
-        self.button_site_lock.state(['!disabled'])   # enabled
+        self.button_site_lock.state(['!disabled'])  # enabled
         self.site_is_locked = False
 
-    def _lock_target(self):
-        # if self.target_data_ok():
-            self.button_target_unlock.state(['!disabled'])
-            self.button_target_lock.state(['disabled'])
-            self.target_data_locked = True
+    # ============ TARGET_AREA ===============
 
-    def _unlock_target(self):
-        self.button_target_unlock.state(['disabled'])
-        self.button_target_lock.state(['!disabled'])
-        self.target_data_locked = False
+    def _update_target_area(self, *keys):
+        if self.target_is_locked:
+            self.target_ra_entry_entry.state(["disabled"])
+            self.target_dec_entry_entry.state(["disabled"])
+            self.occ_time_entry.state(["disabled"])
+            self.button_target_lock.state(["disabled"])
+            self.button_target_unlock.state(['!disabled'])  # enabled
+        else:
+            ra_degrees = u.ra_as_degrees(self.target_ra.get())
+            dec_degrees = u.dec_as_degrees(self.target_dec.get())
+            occ_time = u.next_datetime_from_time_string(self.occ_time.get())
+            if ra_degrees is None:
+                self.target_ra_ok_label['text'] = WRONG_MARK
+                self.target_readback_ra_hex['text'] = NO_DATA
+                self.target_readback_ra_decimal['text'] = NO_DATA
+            else:
+                self.target_ra_ok_label['text'] = CHECK_MARK
+                self.target_readback_ra_hex['text'] = u.ra_as_hours(ra_degrees)
+                self.target_readback_ra_decimal['text'] = '{:10.5f}'.format(ra_degrees)
+            if dec_degrees is None:
+                self.target_dec_ok_label['text'] = WRONG_MARK
+                self.target_readback_dec_hex['text'] = NO_DATA
+                self.target_readback_dec_decimal['text'] = NO_DATA
+            else:
+                self.target_dec_ok_label['text'] = CHECK_MARK
+                self.target_readback_dec_hex['text'] = u.degrees_as_hex(dec_degrees)
+                self.target_readback_dec_decimal['text'] = '{:10.5f}'.format(dec_degrees)
+            if occ_time is None:
+                self.occ_time_ok_label['text'] = WRONG_MARK
+                self.target_readback_occ_time['text'] = NO_DATA
+            else:
+                self.occ_time_ok_label['text'] = CHECK_MARK
+                self.target_readback_occ_time['text'] = u.datetime_as_string(occ_time)
+
+            if ra_degrees is None or dec_degrees is None or occ_time is None:
+                # Can't use or lock Target data as entered.
+                self.target_ra_entry.state(["!disabled"])  # enabled
+                self.target_dec_entry.state(["!disabled"])  # enabled
+                self.occ_time_entry.state(["!disabled"])  # enabled
+                self.button_target_lock.state(["disabled"])
+                self.button_target_unlock.state(['disabled'])
+            else:
+                # Site data as entered is valid and user may lock it.
+                self.target_ra_entry.state(["!disabled"])  # enabled
+                self.target_dec_entry.state(["!disabled"])  # enabled
+                self.occ_time_entry.state(["!disabled"])  # enabled
+                self.button_target_lock.state(["!disabled"])  # enabled
+                self.button_target_unlock.state(['disabled'])
+        self._update_right_side()
+
+    def _target_lock_pressed(self):
+        self.target_ra_entry.state(["disabled"])
+        self.target_dec_entry.state(["disabled"])
+        self.occ_time_entry.state(["disabled"])
+        self.button_target_unlock.state(['!disabled'])  # enabled
+        self.button_target_lock.state(['disabled'])  # disabled
+        self.target_is_locked = True
+
+    def _target_unlock_pressed(self):
+        self.target_ra_entry.state(["!disabled"])
+        self.target_dec_entry.state(["!disabled"])
+        self.occ_time_entry.state(["!disabled"])
+        self.button_target_unlock.state(['disabled'])  # disabled
+        self.button_target_lock.state(['!disabled'])  # enabled
+        self.target_is_locked = False
 
     def _taking_image(self):
         self.image_time = datetime.now(timezone.utc)
-        self.label_image_time['text'] = 'image time =   {:%Y-%m-%d %H:%M:%S}  UTC'.format(self.image_time)
+        self.label_image_time['text'] = 'image time =   ' + u.datetime_as_string(self.image_time)
         self._clear_move_data()
 
     def _calc_and_display_moves(self):
