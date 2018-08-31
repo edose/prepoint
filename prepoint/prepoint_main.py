@@ -61,7 +61,7 @@ class ApplicationPrePoint(tk.Tk):
         self.longitude_entry.grid(row=0, column=1, sticky='ew')
         self.longitude_ok_label = tk.Label(site_inner_frame, text=WRONG_MARK)
         self.longitude_ok_label.grid(row=0, column=2, sticky='ns')
-        longitude_units_label = tk.Label(site_inner_frame, text=' ' + DEGREE_SIGN + '   +E -W')
+        longitude_units_label = tk.Label(site_inner_frame, text=' ' + DEGREE_SIGN + '   +E  -W')
         longitude_units_label.grid(row=0, column=3, sticky='w')
         latitude_label = tk.Label(site_inner_frame, text='Lat. ')
         latitude_label.grid(row=1, column=0, sticky='e')
@@ -72,16 +72,34 @@ class ApplicationPrePoint(tk.Tk):
         self.latitude_entry.grid(row=1, column=1, sticky='ew')
         self.latitude_ok_label = tk.Label(site_inner_frame, text=WRONG_MARK)
         self.latitude_ok_label.grid(row=1, column=2, sticky='ns')
-        latitude_units_label = tk.Label(site_inner_frame, text=' ' + DEGREE_SIGN + '   +N -S')
+        latitude_units_label = tk.Label(site_inner_frame, text=' ' + DEGREE_SIGN + '   +N  -S')
         latitude_units_label.grid(row=1, column=3, sticky='w')
 
+        site_readback_labelframe = tk.LabelFrame(site_inner_frame, text=' readback ', padx=36, pady=5)
+        site_readback_labelframe.grid(row=2, column=0, columnspan=4, sticky='ew', pady=6)
+        site_readback_longitude_label = tk.Label(site_readback_labelframe, text='Long. ')
+        site_readback_longitude_label.grid(row=0, column=0, sticky='e')
+        site_readback_latitude_label = tk.Label(site_readback_labelframe, text='Lat. ')
+        site_readback_latitude_label.grid(row=1, column=0, sticky='e')
+        self.site_readback_longitude_hex = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
+        self.site_readback_longitude_hex.grid(row=0, column=1, sticky='e')
+        self.site_readback_latitude_hex = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
+        self.site_readback_latitude_hex.grid(row=1, column=1, sticky='e')
+        self.site_readback_longitude_dec = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
+        self.site_readback_longitude_dec.grid(row=0, column=2, sticky='e')
+        self.site_readback_latitude_dec = tk.Label(site_readback_labelframe, text=NO_DATA, padx=2)
+        self.site_readback_latitude_dec.grid(row=1, column=2, sticky='e')
+
         site_lock_frame = tk.Frame(site_inner_frame)
-        site_lock_frame.grid(row=2, column=0, columnspan=3, sticky='e')
+        site_lock_frame.grid(row=3, column=0, columnspan=4, sticky='we')
+        site_lock_frame.columnconfigure(0, weight=100)
+        button_site_lock_frame_spacer = tk.Label(site_lock_frame, text=' ')
+        button_site_lock_frame_spacer.grid(row=0, column=0, sticky='ew')
         self.button_site_unlock = ttk.Button(site_lock_frame, text='Unlock',
                                              command=self._site_unlock_pressed)
-        self.button_site_unlock.grid(row=0, column=0, sticky='ew')
+        self.button_site_unlock.grid(row=0, column=1, sticky='e')
         self.button_site_lock = ttk.Button(site_lock_frame, text='Lock', command=self.site_lock_pressed)
-        self.button_site_lock.grid(row=0, column=1, sticky='ew')
+        self.button_site_lock.grid(row=0, column=2, sticky='e')
         self._update_site_area()
 
         # Populate target_labelframe:
@@ -103,7 +121,7 @@ class ApplicationPrePoint(tk.Tk):
         self.target_dec_entry.grid(row=1, column=1, sticky='e')
         self.target_dec_ok_label = tk.Label(target_labelframe, text=WRONG_MARK)
         self.target_dec_ok_label.grid(row=1, column=2, sticky='ns')
-        target_dec_units_label = tk.Label(target_labelframe, text=' ' + DEGREE_SIGN + '   +N -S')
+        target_dec_units_label = tk.Label(target_labelframe, text=' ' + DEGREE_SIGN + '   +N  -S')
         target_dec_units_label.grid(row=1, column=3, sticky='w')
 
         occ_time_label = tk.Label(target_labelframe, text='occ UTC ')
@@ -154,7 +172,7 @@ class ApplicationPrePoint(tk.Tk):
         plate_dec_entry.grid(row=1, column=1, sticky='ew')
         self.plate_dec_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK)
         self.plate_dec_ok_label.grid(row=1, column=2, sticky='ns')
-        plate_dec_units_label = tk.Label(plate_solution_labelframe, text=' ' + DEGREE_SIGN + '   +N -S')
+        plate_dec_units_label = tk.Label(plate_solution_labelframe, text=' ' + DEGREE_SIGN + '   +N  -S')
         plate_dec_units_label.grid(row=1, column=3, sticky='w')
         self.button_calc_moves = ttk.Button(plate_solution_labelframe, text='Calculate Required Moves',
                                             command=self._calc_and_display_moves)
@@ -187,32 +205,51 @@ class ApplicationPrePoint(tk.Tk):
             self.button_site_lock.state(["disabled"])
             self.button_site_unlock.state(['!disabled'])  # enabled
         else:
-            longitude_is_valid = check_longitude_validity(self.longitude.get())
-            latitude_is_valid = check_latitude_validity(self.latitude.get())
-            set_validity_mark(self.longitude, check_longitude_validity, self.longitude_ok_label)
-            set_validity_mark(self.latitude, check_latitude_validity, self.latitude_ok_label)
-            if longitude_is_valid and latitude_is_valid:
-                self.longitude_entry.state(["!disabled"])   # enabled
-                self.latitude_entry.state(["!disabled"])    # enabled
-                self.button_site_lock.state(["!disabled"])  # enabled
-                self.button_site_unlock.state(['disabled'])
+            longitude_degrees = u.longitude_as_degrees(self.longitude.get())
+            latitude_degrees = u.latitude_as_degrees(self.latitude.get())
+            if longitude_degrees is None:
+                self.longitude_ok_label['text'] = WRONG_MARK
+                self.site_readback_longitude_hex['text'] = NO_DATA
+                self.site_readback_longitude_dec['text'] = NO_DATA
             else:
+                self.longitude_ok_label['text'] = CHECK_MARK
+                self.site_readback_longitude_hex['text'] = u.degrees_as_hex(longitude_degrees)
+                self.site_readback_longitude_dec['text'] = '{:10.5f}'.format(longitude_degrees)
+            if latitude_degrees is None:
+                self.latitude_ok_label['text'] = WRONG_MARK
+                self.site_readback_latitude_hex['text'] = NO_DATA
+                self.site_readback_latitude_dec['text'] = NO_DATA
+            else:
+                self.latitude_ok_label['text'] = CHECK_MARK
+                self.site_readback_latitude_hex['text'] = u.degrees_as_hex(latitude_degrees)
+                self.site_readback_latitude_dec['text'] = '{:10.5f}'.format(latitude_degrees)
+            if longitude_degrees is None or latitude_degrees is None:
+                # Can't use or lock site data as entered.
                 self.longitude_entry.state(["!disabled"])   # enabled
                 self.latitude_entry.state(["!disabled"])    # enabled
                 self.button_site_lock.state(["disabled"])
                 self.button_site_unlock.state(['disabled'])
+            else:
+                # Site data as entered is valid and user may lock it.
+                self.longitude_entry.state(["!disabled"])   # enabled
+                self.latitude_entry.state(["!disabled"])    # enabled
+                self.button_site_lock.state(["!disabled"])  # enabled
+                self.button_site_unlock.state(['disabled'])
         self._update_right_side()
 
     def site_lock_pressed(self):
-        # if self.site_data_ok():
-            self.button_site_unlock.state(['!disabled'])
-            self.button_site_lock.state(['disabled'])
-            self.site_data_locked = True
+        self.longitude_entry.state(["disabled"])
+        self.latitude_entry.state(["disabled"])
+        self.button_site_unlock.state(['!disabled'])  # enabled
+        self.button_site_lock.state(['disabled'])     # disabled
+        self.site_is_locked = True
 
     def _site_unlock_pressed(self):
-        self.button_site_unlock.state(['disabled'])
-        self.button_site_lock.state(['!disabled'])
-        self.site_data_locked = False
+        self.longitude_entry.state(["!disabled"])
+        self.latitude_entry.state(["!disabled"])
+        self.button_site_unlock.state(['disabled'])  # disabled
+        self.button_site_lock.state(['!disabled'])   # enabled
+        self.site_is_locked = False
 
     def _lock_target(self):
         # if self.target_data_ok():
@@ -227,7 +264,7 @@ class ApplicationPrePoint(tk.Tk):
 
     def _taking_image(self):
         self.image_time = datetime.now(timezone.utc)
-        self.label_image_time['text'] = 'taken  {:%Y-%m-%d %H:%M:%S}  UTC'.format(self.image_time)
+        self.label_image_time['text'] = 'image time =   {:%Y-%m-%d %H:%M:%S}  UTC'.format(self.image_time)
         self._clear_move_data()
 
     def _calc_and_display_moves(self):
@@ -277,34 +314,11 @@ class ApplicationPrePoint(tk.Tk):
         print('_update_right_side() called')
 
 
-def set_validity_mark(control_variable, validity_function, label_to_set):
+def set_validity_mark(label_to_set, validity):
     """  Applies validity function to a control variable (Entry widget's current contents), and
          sets Label widget to X if not valid, check-mark if valid.
          validity of control_variable's content or not. """
-    value = control_variable.get()
-    is_valid = validity_function(value)
-    character_to_write = CHECK_MARK if is_valid else WRONG_MARK
-    label_to_set['text'] = character_to_write
-
-
-def check_longitude_validity(longitude_text):
-    allowed_chars = '0123456789+-: '
-    if len(longitude_text.strip()) == 0 or (not all([c in allowed_chars for c in longitude_text])):
-        return False
-    longitude_degrees = u.hex_degrees_as_degrees(longitude_text)
-    return -180 <= longitude_degrees <= +180
-
-
-def check_latitude_validity(latitude_text):
-    allowed_chars = '0123456789+-: '
-    if len(latitude_text.strip()) == 0 or (not all([c in allowed_chars for c in latitude_text])):
-        return False
-    latitude_degrees = u.hex_degrees_as_degrees(latitude_text)
-    return -90 <= latitude_degrees <= +90
-
-
-
-
+    label_to_set['text'] = CHECK_MARK if is_valid else WRONG_MARK
 
 
 # ***** Python file entry here. *****

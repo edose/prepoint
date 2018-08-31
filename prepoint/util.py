@@ -76,23 +76,27 @@ def hex_degrees_as_degrees(hex_degrees_string):
     :param hex_degrees_string: string in either full hex ("-12:34:56.7777", or "-12 34 56.7777"),
         or degrees ("-24.55")
     :return float of degrees (not limited)
-    adapted from photrix.util August 2018; added return=None for unparseable string.
+    adapted from photrix.util August 2018; added return=None for unparseable string,
+        or for minutes or seconds = negative or >=60.
     """
-    # dec_list = hex_degrees_string.split(":")
-    dec_list = parse_hex(hex_degrees_string)
-    # dec_list = [dec.strip() for dec in dec_list]
-    if dec_list[0].startswith("-"):
+    hex_list = parse_hex(hex_degrees_string)
+    if hex_list[0].startswith("-"):
         sign = -1
     else:
         sign = 1
     try:
-        if len(dec_list) == 1:
-            dec_degrees = float(dec_list[0])  # input assumed to be in degrees.
-        elif len(dec_list) == 2:
-            dec_degrees = sign * (abs(float(dec_list[0])) + float(dec_list[1])/60.0)  # input is hex.
+        if len(hex_list) == 1:
+            dec_degrees = float(hex_list[0])  # input assumed to be in degrees.
+        elif len(hex_list) == 2:
+            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0):
+                return None
+            dec_degrees = sign * (abs(float(hex_list[0])) + float(hex_list[1])/60.0)  # input is hex.
         else:
-            dec_degrees = sign * (abs(float(dec_list[0])) + float(dec_list[1]) / 60.0 +
-                                  float(dec_list[2])/3600.0)  # input is hex.
+            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0) or\
+               (float(hex_list[2]) >= 60) or (float(hex_list[2]) < 0):
+                return None
+            dec_degrees = sign * (abs(float(hex_list[0])) + float(hex_list[1]) / 60.0 +
+                                  float(hex_list[2])/3600.0)  # input is hex.
     except ValueError:
         return None
     return dec_degrees
@@ -121,21 +125,27 @@ def ra_as_degrees(ra_string):
     :param ra_string: string in either full hex ("12:34:56.7777" or "12 34 56.7777"),
                or degrees ("234.55")
     :return float of Right Ascension in degrees between 0 and 360.
-    adapted from photrix.util August 2018; added return=None for unparseable string.
+    adapted from photrix.util August 2018; added return=None for unparseable string,
+        or for minutes or seconds = negative or >=60.
     """
-    ra_list = parse_hex(ra_string)
+    hex_list = parse_hex(ra_string)
     try:
-        if len(ra_list) == 1:
-            ra_degrees = float(ra_list[0])  # input assumed to be in degrees.
-        elif len(ra_list) == 2:
-            ra_degrees = 15 * (float(ra_list[0]) + float(ra_list[1])/60.0)  # input assumed in hex.
+        if len(hex_list) == 1:
+            ra_degrees = float(hex_list[0])  # input assumed to be in degrees.
+        elif len(hex_list) == 2:
+            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0):
+                return None
+            ra_degrees = 15 * (float(hex_list[0]) + float(hex_list[1])/60.0)  # input assumed in hex.
         else:
-            ra_degrees = 15 * (float(ra_list[0]) + float(ra_list[1]) / 60.0 +
-                               float(ra_list[2])/3600.0)  # input assumed in hex.
+            if (float(hex_list[1]) >= 60) or (float(hex_list[1]) < 0) or\
+               (float(hex_list[2]) >= 60) or (float(hex_list[2]) < 0):
+                return None
+            ra_degrees = 15 * (float(hex_list[0]) + float(hex_list[1]) / 60.0 +
+                               float(hex_list[2])/3600.0)  # input assumed in hex.
     except ValueError:
         return None
-    if (ra_degrees < 0) | (ra_degrees > 360):
-        ra_degrees = None
+    if (ra_degrees < 0) or (ra_degrees > 360):
+        return None
     return ra_degrees
 
 
@@ -184,13 +194,3 @@ def degrees_as_hex(angle_degrees, seconds_decimal_places=2):
     hex_string = format_string.format(sign, int(degrees), int(minutes), seconds)
     return hex_string
 
- 
-# def dec_as_hex(dec_degrees):
-#     """ Input: float of Declination in degrees.
-#         Returns: string of Declination in hex, to the nearest 0.01 arcsecond.
-#     from photrix August 2018.
-#     """
-#     if (dec_degrees < -90) | (dec_degrees > +90):
-#         return None
-#     dec_string = degrees_as_hex(dec_degrees, seconds_decimal_places=2)
-#     return dec_string
