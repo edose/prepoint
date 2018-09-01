@@ -15,6 +15,7 @@ DEGREE_TEXT = 'deg'
 DEGREE_SIGN = u'\N{DEGREE SIGN}'
 CHECK_MARK = '\u2714'  # unicode 'heavy check mark'
 WRONG_MARK = '\u2718'  # unicode 'heavy ballot X'
+CHECK_WRONG_MARK_FONT = ('consolas', 11)
 NO_DATA = '---'
 
 
@@ -66,7 +67,7 @@ class ApplicationPrePoint(tk.Tk):
         self.longitude_entry = ttk.Entry(site_inner_frame, width=22, justify=tk.LEFT,
                                          textvariable=self.longitude)
         self.longitude_entry.grid(row=0, column=1, sticky='ew')
-        self.longitude_ok_label = tk.Label(site_inner_frame, text=WRONG_MARK)
+        self.longitude_ok_label = tk.Label(site_inner_frame, text=WRONG_MARK, font=CHECK_WRONG_MARK_FONT)
         self.longitude_ok_label.grid(row=0, column=2, sticky='ns')
         longitude_units_label = tk.Label(site_inner_frame, text=' ' + DEGREE_TEXT + '   +E  -W')
         longitude_units_label.grid(row=0, column=3, sticky='w')
@@ -77,7 +78,7 @@ class ApplicationPrePoint(tk.Tk):
         self.latitude_entry = ttk.Entry(site_inner_frame, width=22, justify=tk.LEFT,
                                         textvariable=self.latitude)
         self.latitude_entry.grid(row=1, column=1, sticky='ew')
-        self.latitude_ok_label = tk.Label(site_inner_frame, text=WRONG_MARK)
+        self.latitude_ok_label = tk.Label(site_inner_frame, text=WRONG_MARK, font=CHECK_WRONG_MARK_FONT)
         self.latitude_ok_label.grid(row=1, column=2, sticky='ns')
         latitude_units_label = tk.Label(site_inner_frame, text=' ' + DEGREE_TEXT + '   +N  -S')
         latitude_units_label.grid(row=1, column=3, sticky='w')
@@ -109,7 +110,7 @@ class ApplicationPrePoint(tk.Tk):
         self.button_site_lock.grid(row=0, column=2, sticky='e')
         self.locked_longitude_degrees = None
         self.locked_latitude_degrees = None
-        # self._update_site_area()
+        self._update_site_area()
 
         # Populate target_labelframe:
         self.target_is_locked = False
@@ -123,7 +124,7 @@ class ApplicationPrePoint(tk.Tk):
         self.target_ra_entry = ttk.Entry(target_inner_frame, width=22, justify=tk.LEFT,
                                          textvariable=self.target_ra)
         self.target_ra_entry.grid(row=0, column=1, sticky='ew')
-        self.target_ra_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK)
+        self.target_ra_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK, font=CHECK_WRONG_MARK_FONT)
         self.target_ra_ok_label.grid(row=0, column=2, sticky='ns')
         target_ra_units_label = tk.Label(target_inner_frame, text=' hh mm ss')
         target_ra_units_label.grid(row=0, column=3, sticky='w')
@@ -134,7 +135,7 @@ class ApplicationPrePoint(tk.Tk):
         self.target_dec_entry = ttk.Entry(target_inner_frame, width=22, justify=tk.LEFT,
                                           textvariable=self.target_dec)
         self.target_dec_entry.grid(row=1, column=1, sticky='ew')
-        self.target_dec_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK)
+        self.target_dec_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK, font=CHECK_WRONG_MARK_FONT)
         self.target_dec_ok_label.grid(row=1, column=2, sticky='ns')
         target_dec_units_label = tk.Label(target_inner_frame, text=' ' + DEGREE_TEXT + '   +N  -S')
         target_dec_units_label.grid(row=1, column=3, sticky='w')
@@ -146,7 +147,7 @@ class ApplicationPrePoint(tk.Tk):
         self.occ_time_entry = ttk.Entry(target_inner_frame, width=18, justify=tk.LEFT,
                                         textvariable=self.occ_time)
         self.occ_time_entry.grid(row=2, column=1, sticky='e')
-        self.occ_time_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK)
+        self.occ_time_ok_label = tk.Label(target_inner_frame, text=WRONG_MARK, font=CHECK_WRONG_MARK_FONT)
         self.occ_time_ok_label.grid(row=2, column=2, sticky='ns')
         occ_time_units_label = tk.Label(target_inner_frame, text=' hh mm ss (next) ')
         occ_time_units_label.grid(row=2, column=3, sticky='ew')
@@ -190,7 +191,7 @@ class ApplicationPrePoint(tk.Tk):
         self.locked_target_ra_degrees = None
         self.locked_target_dec_degrees = None
         self.locked_occ_datetime = None
-        # self._update_target_area()
+        self._update_target_area()
 
         # Populate right_frame:
         button_taking_image = ttk.Button(right_frame, text='\nCLICK when TAKING IMAGE\n',
@@ -212,7 +213,8 @@ class ApplicationPrePoint(tk.Tk):
         plate_ra_entry = ttk.Entry(plate_solution_labelframe, width=22, justify=tk.LEFT,
                                    textvariable=self.plate_ra)
         plate_ra_entry.grid(row=0, column=1, sticky='ew')
-        self.plate_ra_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK)
+        self.plate_ra_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK,
+                                          font=CHECK_WRONG_MARK_FONT)
         self.plate_ra_ok_label.grid(row=0, column=2, sticky='ns')
         plate_ra_units_label = tk.Label(plate_solution_labelframe, text=' hh mm ss')
         plate_ra_units_label.grid(row=0, column=3, sticky='w')
@@ -223,7 +225,8 @@ class ApplicationPrePoint(tk.Tk):
         plate_dec_entry = ttk.Entry(plate_solution_labelframe, width=22, justify=tk.LEFT,
                                     textvariable=self.plate_dec)
         plate_dec_entry.grid(row=1, column=1, sticky='ew')
-        self.plate_dec_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK)
+        self.plate_dec_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK,
+                                           font=CHECK_WRONG_MARK_FONT)
         self.plate_dec_ok_label.grid(row=1, column=2, sticky='ns')
         plate_dec_units_label = tk.Label(plate_solution_labelframe, text=' ' + DEGREE_TEXT + '   +N  -S')
         plate_dec_units_label.grid(row=1, column=3, sticky='w')
@@ -333,6 +336,7 @@ class ApplicationPrePoint(tk.Tk):
         self.button_site_lock.state(['!disabled'])  # enabled
         self.site_is_locked = False
         self._update_calc_button()
+        self._clear_move_data()
 
     # ============ TARGET_AREA ===============
 
@@ -414,7 +418,7 @@ class ApplicationPrePoint(tk.Tk):
         self.button_target_lock.state(['!disabled'])  # enabled
         self.target_is_locked = False
         self._update_calc_button()
-
+        self._clear_move_data()
 
     # ============ IMAGE and PLATE SOLUTION AREA ===============
 

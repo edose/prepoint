@@ -17,16 +17,10 @@ def calc_az_alt(longitude, latitude, ra, dec, datetime_utc):
     :return: 2-tuple of azimuth, altitude in degrees [2-tuple of floats].
     adapted from photrix August 2018.
     """
-    # TODO: recast this fn for separate ra, dec, rather than RaDec object.
     obs = ephem.Observer()  # for local use.
     obs.lon = degrees_as_hex(longitude)
     obs.lat = degrees_as_hex(latitude)
     obs.date = datetime_utc
-    # print('long.deg=' + str(obs.long))
-    # print('long.raw=' + repr(obs.long))
-    # print('lat.deg=' + str(obs.lat))
-    # print('lat.raw=' + repr(obs.lat))
-    # print('datetime.utc=' + str(obs.date))
 
     target_ephem = ephem.FixedBody()  # so named to suggest restricting its use to ephem.
     target_ephem._epoch = '2000'
