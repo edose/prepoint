@@ -3,6 +3,8 @@
 
 ###### Eric Dose, New Mexico Mira Survey :: Albuquerque, NM
 
+> **TL;DR**  --  See "prepoint screenshot.png" in this repo. Traveling occultation observers will probably get it right away.
+
 Say you want to capture a star occultation event, a short (e.g., 5-second) eclipsing of a star by a passing asteroid. Say also that you have the video camera to capture the event, a laptop to take the video and store it, and a telescope to gather the light into the video camera. Let's also say that you're not using a fixed-base, tracking telescope--you want the freedom to set up where you will, very useful for tracking these passing shadows which don't pass through your back yard all that often, but do quite often pass within short driving distance.  
 
 So when you want to travel, or to set up in your back yard, then non-tracking telescopes like Dobsonians ("dobs") have some real advantages. They're light, they're easy to point, and they gather a LOT of light which helps get better results. But you do have to point them *in advance* to exactly where the occulted star *will be* when the asteroid passes in front.
