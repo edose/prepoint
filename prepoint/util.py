@@ -17,6 +17,8 @@ def calc_az_alt(longitude, latitude, ra, dec, datetime_utc):
     :return: 2-tuple of azimuth, altitude in degrees [2-tuple of floats].
     adapted from photrix August 2018.
     """
+#     return 1.0, 2.0  # dummy line for testing only.
+
     obs = ephem.Observer()  # for local use.
     obs.lon = degrees_as_hex(longitude)
     obs.lat = degrees_as_hex(latitude)

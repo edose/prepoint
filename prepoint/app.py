@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from datetime import datetime, timezone
 
-from prepoint import util as u
+# import prepoint.util as u
+import prepoint.util as u
 
 __author__ = "Eric Dose :: New Mexico Mira Project, Albuquerque"
 
