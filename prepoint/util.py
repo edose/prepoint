@@ -24,7 +24,7 @@ def calc_az_alt(longitude, latitude, ra, dec, datetime_utc):
     obs.lat = degrees_as_hex(latitude)
     obs.date = datetime_utc
 
-    target_ephem = ephem.FixedBody()  # so named to suggest restricting its use to ephem.
+    target_ephem = ephem.FixedBody()  # named to suggest restricting its use to ephem.
     target_ephem._epoch = '2000'
     target_ephem._ra = ra_as_hours(ra)
     target_ephem._dec = degrees_as_hex(dec)
@@ -33,6 +33,11 @@ def calc_az_alt(longitude, latitude, ra, dec, datetime_utc):
 
 
 def next_datetime_from_time_string(time_text):
+    """
+    Given a time string, returns next datetime UTC for that time.
+    :param time_text: (string) of form hh:mm:ss or hh mm ss.
+    :return: next datetime from now for given time string (py datetime)
+    """
     time_list = parse_hex(time_text)
     if len(time_list) != 3:
         return None
@@ -50,7 +55,8 @@ def next_datetime_from_time_string(time_text):
         return None
     now = datetime.now(timezone.utc)
     raw_time = datetime(year=now.year, month=now.month, day=now.day,
-                        hour=hour, minute=minute, second=second).replace(tzinfo=timezone.utc)
+                        hour=hour, minute=minute,
+                        second=second).replace(tzinfo=timezone.utc)
     if raw_time > now:
         return raw_time
     else:
@@ -62,7 +68,7 @@ PARSE_TEXT__________________________ = 0
 
 def parse_hex(hex_string):
     """
-    Helper function for RA and Dec parsing, takes hex string, returns list of floats.
+     Helper function for RA and Dec parsing, takes hex string, returns list of floats.
     :param hex_string: string in either full hex ("12:34:56.7777" or "12 34 56.7777"),
                or degrees ("234.55")
     :return: list of strings representing floats (hours:min:sec or deg:arcmin:arcsec).
@@ -76,12 +82,13 @@ def parse_hex(hex_string):
 
 
 def hex_degrees_as_degrees(hex_degrees_string):
-    """
-    :param hex_degrees_string: string in either full hex ("-12:34:56.7777", or "-12 34 56.7777"),
-        or degrees ("-24.55")
-    :return float of degrees (not limited)
-    adapted from photrix.util August 2018; added return=None for unparseable string,
+    """ Returns degrees for input string.
+        Adapted from photrix.util August 2018; added return=None for unparseable string,
         or for minutes or seconds = negative or >=60.
+    :param hex_degrees_string: (string) either in
+           full hex ("-12:34:56.7777", or "-12 34 56.7777"),
+           or degrees ("-24.55")
+    :return (float) degrees (not limited)
     """
     hex_list = parse_hex(hex_degrees_string)
     if hex_list[0].startswith("-"):
@@ -94,7 +101,8 @@ def hex_degrees_as_degrees(hex_degrees_string):
         elif len(hex_list) == 2:
             if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0):
                 return None
-            dec_degrees = sign * (abs(int(hex_list[0])) + int(hex_list[1])/60.0)  # input is hex.
+            # Here, input must be hex.
+            dec_degrees = sign * (abs(int(hex_list[0])) + int(hex_list[1])/60.0)
         else:
             if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0) or\
                (float(hex_list[2]) >= 60) or (float(hex_list[2]) < 0):
@@ -107,6 +115,11 @@ def hex_degrees_as_degrees(hex_degrees_string):
 
 
 def longitude_as_degrees(longitude_string):
+    """ Wrapper function for hex_degrees_as_degrees(), interpreted as longitude,
+        and handling faulty input.
+    :param longitude_string: as 
+    :return:
+    """
     degrees = hex_degrees_as_degrees(longitude_string)
     if degrees is None:
         return None
@@ -116,6 +129,11 @@ def longitude_as_degrees(longitude_string):
 
 
 def latitude_as_degrees(latitude_string):
+    """ Wrapper function for hex_degrees_as_degrees, interpreted as lagitude,
+        and handling faulty input.
+    :param latitude_string:
+    :return:
+    """
     degrees = hex_degrees_as_degrees(latitude_string)
     if degrees is None:
         return None
@@ -125,13 +143,13 @@ def latitude_as_degrees(latitude_string):
 
 
 def ra_as_degrees(ra_string):
-    """
-    :param ra_string: string in either  hex ("12:34:56.7777" or "12 34 56.7777" or "12 34"),
+    """ Converts RA string to degrees (float).
+        Adapted from photrix.util August 2018; added return=None for
+        unparseable string, or for minutes or seconds = negative or >=60.
+    :param ra_string:
+               string in hex ("12:34:56.7777" or "12 34 56.7777" or "12 34"),
                but not in degrees in this implementation.
-    :return float of Right Ascension in degrees between 0 and 360.
-    adapted from photrix.util August 2018; added return=None for unparseable string,
-        or for minutes or seconds = negative or >=60.
-    adapted heavily from photrix, August 2018.
+    :return [float] Right Ascension in degrees between 0 and 360.
     """
     hex_list = parse_hex(ra_string)
     try:
@@ -140,7 +158,8 @@ def ra_as_degrees(ra_string):
         elif len(hex_list) == 2:
             if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0):
                 return None
-            ra_degrees = 15 * (int(hex_list[0]) + int(hex_list[1])/60.0)  # input assumed in hex.
+            # next line: input assumed to be hex string.
+            ra_degrees = 15 * (int(hex_list[0]) + int(hex_list[1])/60.0)
         else:
             if (int(hex_list[1]) >= 60) or (int(hex_list[1]) < 0) or\
                (float(hex_list[2]) >= 60) or (float(hex_list[2]) < 0):
@@ -155,7 +174,30 @@ def ra_as_degrees(ra_string):
 
 
 def dec_as_degrees(dec_text):
+    """ Simple wrapper (alias) for latitude_as_degrees(). """
     return latitude_as_degrees(dec_text)  # exactly the same math & limits.
+
+
+def parse_sharpcap_platesolution_text(text: str):
+    """ From text block output by SharpCap's plate solver (probably gotten from
+        the Windows clipboard by get_clipboard()), return plate solution parameters.
+    :return: [tuple of strings] time_utc, ra, dec, rotation
+        time_iso_utc: string in ISO format + "UTC" = "%d %b %Y %H:%M:%S  UTC"
+        ra: Right Ascension in hours, hex format
+        dec: Declination in degrees, hex format
+        rotation: Rotation ("Orientation") in degrees East of North
+    """
+    lines = [line for line in text.splitlines() if line.strip() != '']
+    if len(lines) != 4:
+        return None
+    ra_dec_strings = lines[0].split('=')
+    ra_string = ra_dec_strings[1].strip().split(',')[0].strip()
+    dec_string = ra_dec_strings[2].strip().split('(')[0].strip()
+    datetime_string = lines[2].split(',')[1].split("GMT")[0].strip()
+    datetime_iso_utc = datetime_as_string(datetime.strptime(datetime_string,
+                                                            "%d %b %Y %H:%M:%S"))
+    rotation_string = lines[3].split("is")[1].strip().split()[0].strip()
+    return datetime_iso_utc, ra_string, dec_string, rotation_string
 
 
 RECAST_TO_TEXT___________________ = 0
@@ -180,12 +222,11 @@ def ra_as_hours(ra_degrees):
 
 
 def degrees_as_hex(angle_degrees, seconds_decimal_places=2):
-    """
+    """ Converts float degrees to hex string. Adapted from photrix of August 2018.
     :param angle_degrees: any angle as degrees [float]
-    :param seconds_decimal_places: number of decimal places to express for seconds part of hex string [int]
-    :return: same angle in hex notation, unbounded [string].
-    from photrix August 2018.
-    """
+    :param seconds_decimal_places: number of decimal places
+           to express for seconds part of hex string [int]
+    :return: same angle in hex notation, unbounded [string]. """
     if angle_degrees < 0:
         sign = "-"
     else:
@@ -202,6 +243,25 @@ def degrees_as_hex(angle_degrees, seconds_decimal_places=2):
 
 
 def datetime_as_string(this_datetime):
+    """ Converts a py datetime object to ISO string (yyyy-mm-dd hh:mm:ss).
+    :param this_datetime:
+    :return: ISO time string.
+    """
     if not isinstance(this_datetime, datetime):
         return None
     return '{:%Y-%m-%d %H:%M:%S}  UTC'.format(this_datetime)
+
+
+OTHER_UTILITIES___________________ = 0
+
+
+def get_windows_clipboard():
+    """ Returns string contents of current Windows clipboard.
+    :return: [string]
+    """
+    from tkinter import Tk
+    a = Tk()
+    clipboard = a.clipboard_get()
+    a.destroy()  # Do let's clean up after ourselves.
+    return clipboard
+
