@@ -181,8 +181,8 @@ def dec_as_degrees(dec_text):
 def parse_sharpcap_platesolution_text(text: str):
     """ From text block output by SharpCap's plate solver (probably gotten from
         the Windows clipboard by get_clipboard()), return plate solution parameters.
-    :return: [tuple of strings] time_utc, ra, dec, rotation
-        time_iso_utc: string in ISO format + "UTC" = "%d %b %Y %H:%M:%S  UTC"
+    :return: [tuple: 1 datetime + 3 strings] time_utc, ra, dec, rotation
+        datetime_iso_utc: datetime
         ra: Right Ascension in hours, hex format
         dec: Declination in degrees, hex format
         rotation: Rotation ("Orientation") in degrees East of North
@@ -194,9 +194,17 @@ def parse_sharpcap_platesolution_text(text: str):
     ra_string = ra_dec_strings[1].strip().split(',')[0].strip()
     dec_string = ra_dec_strings[2].strip().split('(')[0].strip()
     datetime_string = lines[2].split(',')[1].split("GMT")[0].strip()
-    datetime_iso_utc = datetime_as_string(datetime.strptime(datetime_string,
-                                                            "%d %b %Y %H:%M:%S"))
-    rotation_string = lines[3].split("is")[1].strip().split()[0].strip()
+    datetime_iso_utc = datetime.strptime(datetime_string, "%d %b %Y %H:%M:%S")
+
+    # Special handling for SharpCap's "Orientation" text field:
+    raw_rot_value_string = lines[3].split("is")[1].strip().split()[0].strip()
+    raw_rot_direction_string = lines[3].split("degrees")[1].strip().split()[0].strip()
+    direction_is_west = (raw_rot_direction_string.upper() == "W")
+    if direction_is_west:
+        rotation_string = str(-float(raw_rot_value_string))
+    else:
+        rotation_string = raw_rot_value_string
+    # rotation_string is always plate rotation in degrees E of N:
     return datetime_iso_utc, ra_string, dec_string, rotation_string
 
 

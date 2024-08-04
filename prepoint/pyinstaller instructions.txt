@@ -1,0 +1,3 @@
+To run pyinstaller:
+
+(prepoint_3.10.9) PS C:\Dev\prepoint\prepoint> C:\Programs\Python_envs\prepoint_3.10.9\Scripts\pyinstaller --onefile app.py

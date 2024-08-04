@@ -21,6 +21,7 @@ CHECK_MARK = '\u2714'  # unicode 'heavy check mark'
 WRONG_MARK = '\u2718'  # unicode 'heavy ballot X'
 CHECK_WRONG_MARK_FONT = ('consolas', 11)
 NO_DATA = '---'
+CAMERA_ROTATION_TOLERANCE = 1.0  # degrees
 
 
 class ApplicationPrePoint(tk.Tk):
@@ -231,53 +232,67 @@ class ApplicationPrePoint(tk.Tk):
         self._update_target_area()
 
         # Populate right_frame:
-        button_taking_image = ttk.Button(right_frame,
-                                         text='\nCLICK when TAKING IMAGE\n',
-                                         command=self._taking_image)
-        button_taking_image.grid(sticky='ew')
-        self.label_image_datetime = tk.Label(right_frame, width=32, justify=tk.CENTER,
-                                             text=NO_DATA)
-        self.label_image_datetime.grid(sticky='ew')
-        self.image_datetime = None
 
         # Populate plate_solution_labelframe:
         plate_solution_labelframe = tk.LabelFrame(right_frame,
-                                                  text=' Image PLATE SOLUTION ',
+                                                  text=' From Image  -->'
+                                                       ' Plate Solution ',
                                                   padx=10, pady=10)
-        plate_solution_labelframe.grid(pady=15, sticky='ew')
+        plate_solution_labelframe.grid(pady=5, sticky='ew')
 
-        plate_ra_label = tk.Label(plate_solution_labelframe, text='RA ')
+        # Populate row 0 (frame of (button + time readout):
+        taking_image_frame = ttk.Frame(plate_solution_labelframe, padding=2)
+        taking_image_frame.grid(row=0, column=0, columnspan=3, sticky='ew')
+        taking_image_frame.columnconfigure(0, weight=100)
+        button_taking_image = ttk.Button(taking_image_frame, width=26,
+                                         text='\nCLICK when TAKING IMAGE\n',
+                                         command=self._taking_image, padding=2)
+        button_taking_image.grid(row=0, column=0, sticky='w')
+        self.label_image_datetime = tk.Label(taking_image_frame, width=30,
+                                             justify=tk.LEFT, text=NO_DATA)
+        self.label_image_datetime.grid(row=0, column=1, sticky='w')
+        self.image_datetime = None
+
+        # Populate row 1 (subframe "taking_image_radec_frame" for (RA + Dec)):
+        taking_image_radec_frame = ttk.Frame(plate_solution_labelframe, padding=5)
+        taking_image_radec_frame.grid(row=1, column=0, columnspan=3,
+                                      sticky='ew', pady=3)
+
+        # Populate first row of subframe (RA):
+        plate_ra_label = tk.Label(taking_image_radec_frame, text='RA ')
         plate_ra_label.grid(row=0, column=0, sticky='e')
         self.plate_ra = tk.StringVar()
         self.plate_ra.trace('w', self._update_plate_solution_area)
-        plate_ra_entry = ttk.Entry(plate_solution_labelframe, width=22, justify=tk.LEFT,
+        plate_ra_entry = ttk.Entry(taking_image_radec_frame, width=24, justify=tk.LEFT,
                                    textvariable=self.plate_ra)
         plate_ra_entry.grid(row=0, column=1, sticky='ew')
-        self.plate_ra_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK,
+        self.plate_ra_ok_label = tk.Label(taking_image_radec_frame, text=WRONG_MARK,
                                           font=CHECK_WRONG_MARK_FONT)
         self.plate_ra_ok_label.grid(row=0, column=2, sticky='ns')
-        plate_ra_units_label = tk.Label(plate_solution_labelframe, text=' hh mm ss')
+        plate_ra_units_label = tk.Label(taking_image_radec_frame, text=' hh mm ss')
         plate_ra_units_label.grid(row=0, column=3, sticky='w')
-        plate_dec_label = tk.Label(plate_solution_labelframe, text='Dec ')
+
+        # Populate row 1 of subframe (Dec):
+        plate_dec_label = tk.Label(taking_image_radec_frame, text='Dec ')
         plate_dec_label.grid(row=1, column=0, sticky='e')
         self.plate_dec = tk.StringVar()
         self.plate_dec.trace('w', self._update_plate_solution_area)
-        plate_dec_entry = ttk.Entry(plate_solution_labelframe,
-                                    width=22, justify=tk.LEFT,
+        plate_dec_entry = ttk.Entry(taking_image_radec_frame, width=24, justify=tk.LEFT,
                                     textvariable=self.plate_dec)
         plate_dec_entry.grid(row=1, column=1, sticky='ew')
-        self.plate_dec_ok_label = tk.Label(plate_solution_labelframe, text=WRONG_MARK,
+        self.plate_dec_ok_label = tk.Label(taking_image_radec_frame, text=WRONG_MARK,
                                            font=CHECK_WRONG_MARK_FONT)
         self.plate_dec_ok_label.grid(row=1, column=2, sticky='ns')
-        plate_dec_units_label = tk.Label(plate_solution_labelframe,
+        plate_dec_units_label = tk.Label(taking_image_radec_frame,
                                          text=' ' + DEGREE_TEXT + '   +N  -S')
         plate_dec_units_label.grid(row=1, column=3, sticky='w')
 
+        # Populate row 2 (labelframe "readback"):
         plate_readback_labelframe = tk.LabelFrame(plate_solution_labelframe,
                                                   text=' readback ',
                                                   padx=36, pady=5)
-        plate_readback_labelframe.grid(row=2, column=0, columnspan=4,
-                                       sticky='ew', pady=6)
+        plate_readback_labelframe.grid(row=3, column=0, columnspan=4,
+                                       sticky='ew', pady=3)
         plate_readback_ra_label = tk.Label(plate_readback_labelframe, text='RA ')
         plate_readback_ra_label.grid(row=0, column=0, sticky='e')
         plate_readback_dec_label = tk.Label(plate_readback_labelframe, text='Dec ')
@@ -297,16 +312,45 @@ class ApplicationPrePoint(tk.Tk):
                                                    text=NO_DATA, padx=2)
         self.plate_readback_dec_decimal.grid(row=1, column=2, sticky='e')
 
+        # Populate row 3 (button "Calculate Required Moves"):
         self.button_calc_moves = ttk.Button(plate_solution_labelframe,
                                             text='Calculate Required Moves',
                                             command=self._calc_and_display_moves)
-        self.button_calc_moves.grid(row=3, column=1, columnspan=3, sticky='e')
+        self.button_calc_moves.grid(row=4, column=1, columnspan=3, sticky='e')
         self.button_calc_moves.state(["disabled"])
         self.plate_ra_degrees = None
         self.plate_dec_degrees = None
         # self._update_plate_solution_area()
 
-        # Populate move_scope_labelframe:
+        # Populate row 4 "get_sharpcap_labelframe":
+        get_sharpcap_labelframe = tk.LabelFrame(right_frame,
+                                                text=' From SharpCap  --> clipboard ',
+                                                padx=5, pady=5)
+        get_sharpcap_labelframe.grid(row=4, column=0, columnspan=3, sticky='ew')
+        get_sharpcap_button = ttk.Button(get_sharpcap_labelframe,
+                                         text='GET SHARPCAP\nPlate Solution\n'
+                                              'from clipboard', padding=6,
+                                         command=self._get_sharpcap_platesolution)
+        get_sharpcap_button.grid(row=0, column=0, rowspan=4, sticky='w',
+                                 padx=14, ipadx=8, ipady=8)
+        self.sharpcap_time_label = tk.Label(get_sharpcap_labelframe, text='')
+        self.sharpcap_time_label.grid(row=0, column=1, sticky='e')
+        self.sharpcap_time_value = tk.Label(get_sharpcap_labelframe, text=NO_DATA)
+        self.sharpcap_time_value.grid(row=0, column=2, sticky='w')
+        sharpcap_ra_label = tk.Label(get_sharpcap_labelframe, text='RA')
+        sharpcap_ra_label.grid(row=1, column=1, sticky='e')
+        self.sharpcap_ra_value = tk.Label(get_sharpcap_labelframe, text=NO_DATA)
+        self.sharpcap_ra_value.grid(row=1, column=2, sticky='w')
+        sharpcap_dec_label = tk.Label(get_sharpcap_labelframe, text='Dec')
+        sharpcap_dec_label.grid(row=2, column=1, sticky='e')
+        self.sharpcap_dec_value = tk.Label(get_sharpcap_labelframe, text=NO_DATA)
+        self.sharpcap_dec_value.grid(row=2, column=2, sticky='w')
+        sharpcap_rot_label = tk.Label(get_sharpcap_labelframe, text='Rotation')
+        sharpcap_rot_label.grid(row=3, column=1, sticky='e')
+        self.sharpcap_rot_value = tk.Label(get_sharpcap_labelframe, text=NO_DATA)
+        self.sharpcap_rot_value.grid(row=3, column=2, sticky='w')
+
+        # Populate row 5 "move_scope_labelframe":
         move_scope_labelframe = tk.LabelFrame(right_frame,
                                               text=' MOVE SCOPE ', font=MOVE_SCOPE_FONT,
                                               padx=10, pady=16)
@@ -494,8 +538,8 @@ class ApplicationPrePoint(tk.Tk):
 
     def _taking_image(self):
         self.image_datetime = datetime.now(timezone.utc)
-        self.label_image_datetime['text'] = 'image time =   ' + \
-                                            u.datetime_as_string(self.image_datetime)
+        self.label_image_datetime['text'] = \
+            'image time =   ' + u.datetime_as_string(self.image_datetime)
         self._update_calc_button()
         self._clear_move_data()
 
@@ -595,6 +639,42 @@ class ApplicationPrePoint(tk.Tk):
             self.button_calc_moves.state(["!disabled"])  # enabled
         else:
             self.button_calc_moves.state(["disabled"])
+
+    def _get_sharpcap_platesolution(self):
+
+        # Get data needed to calculate moves:
+        clipboard = u.get_windows_clipboard()
+        return_tuple = u.parse_sharpcap_platesolution_text(clipboard)
+        if return_tuple is None:
+            self._clear_move_data()
+            self.sharpcap_time_value['text'] = \
+                'No SharpCap plate solution in clipboard.'
+            return
+        clipboard_datetime, self.plate_ra, self.plate_dec, self.plate_rotation = \
+            return_tuple
+        self.image_datetime = \
+            u.datetime_as_string(clipboard_datetime).split('UTC')[0].strip()
+        self.plate_ra_degrees = u.ra_as_degrees(self.plate_ra)
+        self.plate_dec_degrees = u.dec_as_degrees(self.plate_dec)
+
+        # Update SharpCap fields:
+        self.sharpcap_time_value['text'] = self.image_datetime.strip() + '  UTC'
+        self.sharpcap_ra_value['text'] = self.plate_ra
+        self.sharpcap_dec_value['text'] = self.plate_dec
+        sharpcap_rot_text = self.plate_rotation.strip() + DEGREE_SIGN
+        sharpcap_abs_rot_text = sharpcap_rot_text[1:] \
+            if sharpcap_rot_text.startswith('-') \
+            else sharpcap_rot_text
+        if float(self.plate_rotation) > CAMERA_ROTATION_TOLERANCE:
+            camera_rotation_instruction = 'Turn camera CCW by ' + sharpcap_abs_rot_text
+        elif float(self.plate_rotation) < -CAMERA_ROTATION_TOLERANCE:
+            camera_rotation_instruction = 'Turn camera CW by ' + sharpcap_abs_rot_text
+        else:
+            camera_rotation_instruction = '(Do not turn camera.)'
+
+        self.sharpcap_rot_value['text'] = \
+            sharpcap_rot_text + ' --> ' + camera_rotation_instruction
+        self._calc_and_display_moves()
 
 
 # ***** Python file entry here. *****
